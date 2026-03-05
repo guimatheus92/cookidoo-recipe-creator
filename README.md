@@ -273,6 +273,9 @@ Currently, one recipe at a time. Each recipe requires a separate conversion and 
 **Q: Will my account get banned for using the API?**
 This project uses the same API calls that the Cookidoo web app makes in your browser. It's equivalent to you manually filling in the forms. However, since this is not an official API, use it responsibly and at your own risk.
 
+**Q: Is this safe? Can someone steal my Cookidoo credentials?**
+No credentials are stored or transmitted. With Option A (Chrome DevTools MCP), Claude runs `fetch()` calls inside your already-logged-in browser — cookies never leave the browser engine. With Option B (manual cookie), you share a temporary session token that expires shortly. In both cases, the requests are identical to what happens when you click buttons on the Cookidoo website. See the [Security & Privacy](#security--privacy) section for a detailed breakdown.
+
 **Q: Can I share my created recipes with others?**
 Yes. Cookidoo has a "Partilhar" (Share) feature for created recipes. After uploading, go to your recipe and use the share option.
 
@@ -317,6 +320,40 @@ Make sure your Thermomix is connected to Wi-Fi and synced with Cookidoo. Go to t
 
 ### Cookidoo Regional Portals
 [Portugal](https://cookidoo.pt) &bull; [Brasil](https://cookidoo.com.br) &bull; [US](https://cookidoo.thermomix.com) &bull; [UK](https://cookidoo.co.uk) &bull; [Germany](https://cookidoo.de) &bull; [Spain](https://cookidoo.es) &bull; [France](https://cookidoo.fr) &bull; [Italy](https://cookidoo.it)
+
+---
+
+## Security & Privacy
+
+### What we're actually doing
+
+This project makes **the exact same HTTP requests** that the Cookidoo website makes when you manually create a recipe. Here's the comparison:
+
+| | You doing it manually | This project |
+|---|---|---|
+| **Where it runs** | Your browser | Your browser (via Chrome DevTools MCP) |
+| **Authentication** | Your session cookies | Your session cookies (same ones) |
+| **API calls** | `POST /created-recipes/...` | `POST /created-recipes/...` (identical) |
+| **Data sent** | Recipe name, ingredients, steps | Recipe name, ingredients, steps (identical) |
+| **Credentials stored?** | No | No |
+
+### How authentication works
+
+- **Option A (Chrome DevTools MCP):** Claude runs `fetch()` calls inside your already-logged-in browser tab. Cookies never leave the browser — they're sent automatically by the browser engine, just like when you click buttons on the page.
+- **Option B (Manual cookie):** You copy a session cookie and share it with Claude. This cookie is temporary and expires after a short time. It is only used during the current session and is not stored anywhere.
+
+### What this does NOT do
+
+- Does not store, log, or transmit your credentials
+- Does not reverse-engineer or bypass any security mechanisms
+- Does not access any data beyond your own created recipes
+- Does not modify or delete existing recipes (only creates new ones or updates ones you specify)
+- Does not run any code outside your browser context
+
+### Honest risks
+
+- Cookidoo does not provide an official public API. These endpoints are internal and could change at any time, which would break the integration (but not harm your account).
+- As with any unofficial tool, use responsibly and at your own risk.
 
 ---
 
