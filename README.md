@@ -12,12 +12,10 @@ Convert any recipe from the web into Thermomix format and upload it directly to 
 
 ## What does this do?
 
-1. You share a recipe URL (from any cooking website)
+1. You share a recipe — a **URL**, **pasted text**, **screenshot**, or **PDF**
 2. Claude converts it to Thermomix format (speeds, times, temperatures)
 3. Uploads it directly to your Cookidoo account via API
 4. Also generates `.md` and `.pdf` files for printing
-
-**Before (website recipe)** &rarr; **After (Cookidoo with all steps)**
 
 ---
 
@@ -84,6 +82,15 @@ curl -o ~/.claude/skills/cookidoo-recipe.md https://raw.githubusercontent.com/gu
 ```
 Convert this recipe for my Thermomix TM7 and upload to Cookidoo:
 https://example.com/chocolate-cake-recipe
+```
+
+Or paste the recipe text directly:
+
+```
+Convert this to TM7 and upload to Cookidoo:
+
+Ingredients: 200g flour, 100g sugar, 2 eggs, 150g butter...
+Instructions: Mix flour and sugar, add eggs...
 ```
 
 Claude will ask you to confirm the model, language, and servings, then handle everything automatically.
@@ -227,7 +234,7 @@ Yes. You need an active Cookidoo subscription to create and save custom recipes.
 This skill itself is free and open source. You need a [Claude Code](https://docs.anthropic.com/en/docs/claude-code) subscription and a Cookidoo subscription.
 
 **Q: Can I convert recipes from any website?**
-Yes. Claude fetches the recipe from any public URL. It works with all major recipe websites. You can also paste recipe text directly instead of a URL.
+Yes. Claude accepts recipes in multiple formats: a **URL** (from any cooking website), **pasted text** (copy from a book, message, or app), a **screenshot** (photo of a recipe card or book page), or a **PDF**. It works with all major recipe websites and any language — Claude translates and converts automatically.
 
 **Q: Do I need to know programming?**
 No. Once the initial setup is done (one-time), you just talk to Claude in natural language. Claude handles all the API calls internally.
