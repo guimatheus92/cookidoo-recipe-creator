@@ -27,7 +27,7 @@ Convert any recipe from the web into Thermomix format and upload it directly to 
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed
 - A [Cookidoo](https://cookidoo.thermomix.com) account with active subscription
-- Google Chrome browser
+- Google Chrome browser (**only required for Cookidoo upload** — not needed if you just want `.md` / `.pdf` output)
 
 ### 1. Install Chrome DevTools MCP
 
@@ -90,6 +90,58 @@ Claude will ask you to confirm the model, language, and servings, then handle ev
 
 ---
 
+## How It Works
+
+### 1. Recipe Conversion
+
+Claude converts standard recipes to Thermomix format using these typical operations:
+
+| Operation | Thermomix Setting |
+|---|---|
+| Chop/grind | 5-10 sec / speed 7-10 |
+| Mix dry ingredients | 5 sec / speed 4 |
+| Cream butter + sugar | 1 min / speed 4 |
+| Add egg/liquids | 20 sec / speed 3 |
+| Fold in dry ingredients | 15 sec / speed 2, reverse |
+| Add chunks (don't crush) | 10 sec / speed 1, reverse |
+| Knead dough | 2 min / knead mode |
+| Cook/sauté | X min / temp°C / speed 1 |
+| Steam (Varoma) | X min / Varoma / speed 1 |
+
+### 2. The Cookidoo API
+
+Cookidoo doesn't provide a public API, but the web app uses internal REST endpoints that we can call from the browser context. This project uses two endpoints:
+
+**Create a recipe:**
+```
+POST /created-recipes/{locale}
+Body: { "recipeName": "My Recipe" }
+```
+
+**Update a recipe (ingredients, steps, metadata):**
+```
+PATCH /created-recipes/{locale}/{recipeId}
+Body: {
+  ingredients: [{ type: "INGREDIENT", text: "228 g flour" }],
+  instructions: [{ type: "STEP", text: "Add flour. Mix 5 sec/speed 4." }],
+  tools: ["TM7"],
+  totalTime: 9000,  // seconds
+  prepTime: 1200,   // seconds
+  yield: { value: 4, unitText: "portion" }
+}
+```
+
+Authentication is handled automatically through browser cookies when using Chrome DevTools MCP.
+
+### 3. Output
+
+Claude generates three things:
+- **Cookidoo recipe** — uploaded directly to your account (if browser connected)
+- **Markdown file** (`.md`) — full recipe with ingredients table and numbered steps
+- **PDF file** (`.pdf`) — formatted for printing
+
+---
+
 ## Supported Models
 
 | Feature | TM7 | TM6 | TM5 | TM31 |
@@ -120,58 +172,23 @@ Claude will ask you to confirm the model, language, and servings, then handle ev
 
 ---
 
-## How It Works
+## Alternative Setup (No Chrome / No MCP)
 
-### The Cookidoo API
+Google Chrome and the DevTools MCP are **only required if you want to upload recipes directly to Cookidoo**. There are three usage modes:
 
-Cookidoo doesn't provide a public API, but the web app uses internal REST endpoints that we can call from the browser context. This project uses two endpoints:
+| Mode | Chrome needed? | MCP needed? | What you get |
+|---|:---:|:---:|---|
+| **Full (recommended)** | Yes | Yes | Cookidoo upload + `.md` + `.pdf` |
+| **Manual cookie** | Any browser | No | Cookidoo upload + `.md` + `.pdf` |
+| **Offline** | No | No | `.md` + `.pdf` only |
 
-**Create a recipe:**
-```
-POST /created-recipes/{locale}
-Body: { "recipeName": "My Recipe" }
-```
+### Manual cookie approach
 
-**Update a recipe (ingredients, steps, metadata):**
-```
-PATCH /created-recipes/{locale}/{recipeId}
-Body: {
-  ingredients: [{ type: "INGREDIENT", text: "228 g flour" }],
-  instructions: [{ type: "STEP", text: "Add flour. Mix 5 sec/speed 4." }],
-  tools: ["TM7"],
-  totalTime: 9000,  // seconds
-  prepTime: 1200,   // seconds
-  yield: { value: 4, unitText: "portion" }
-}
-```
-
-Authentication is handled automatically through browser cookies when using Chrome DevTools MCP.
-
-### Recipe Conversion
-
-Claude converts standard recipes to Thermomix format using these typical operations:
-
-| Operation | Thermomix Setting |
-|---|---|
-| Chop/grind | 5-10 sec / speed 7-10 |
-| Mix dry ingredients | 5 sec / speed 4 |
-| Cream butter + sugar | 1 min / speed 4 |
-| Add egg/liquids | 20 sec / speed 3 |
-| Fold in dry ingredients | 15 sec / speed 2, reverse |
-| Add chunks (don't crush) | 10 sec / speed 1, reverse |
-| Knead dough | 2 min / knead mode |
-| Cook/sauté | X min / temp°C / speed 1 |
-| Steam (Varoma) | X min / Varoma / speed 1 |
-
----
-
-## Alternative Setup (No MCP)
-
-If you don't want to install Chrome DevTools MCP, you can manually provide the auth cookie:
+If you don't want to install Chrome DevTools MCP, you can manually provide the auth cookie from **any browser** (Chrome, Firefox, Edge, Safari):
 
 1. Open Cookidoo in your browser and log in
 2. Press **F12** to open Developer Tools
-3. Go to **Application** tab &rarr; **Cookies** &rarr; click your Cookidoo domain
+3. Go to **Application** tab (Chrome/Edge) or **Storage** tab (Firefox) &rarr; **Cookies** &rarr; click your Cookidoo domain
 4. Find the cookie named `v-authenticated`
 5. Copy its value and share it with Claude
 
