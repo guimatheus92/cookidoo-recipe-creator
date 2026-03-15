@@ -14,8 +14,8 @@ Convert any recipe from the web into Thermomix format and upload it directly to 
 
 1. You share a recipe — a **URL**, **pasted text**, **screenshot**, or **PDF**
 2. Claude converts it to Thermomix format (speeds, times, temperatures)
-3. Uploads it directly to your Cookidoo account via API
-4. Also generates `.md` and `.pdf` files for printing
+3. Uploads it directly to your Cookidoo account via API — with **linked ingredients** and **Thermomix actions** properly annotated
+4. Optionally generates a recipe image if you don't provide one
 
 ---
 
@@ -47,16 +47,19 @@ Add to your Claude Code settings (`~/.claude/settings.json`):
 ### 2. Open Chrome with remote debugging
 
 **Windows** — Create a shortcut with this target:
-```
+
+```shell
 "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222
 ```
 
 **Mac** — Run in terminal:
+
 ```bash
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
 ```
 
 **Linux** — Run in terminal:
+
 ```bash
 google-chrome --remote-debugging-port=9222
 ```
@@ -79,14 +82,14 @@ curl -o ~/.claude/skills/cookidoo-recipe.md https://raw.githubusercontent.com/gu
 2. Go to your Cookidoo site and **log in**
 3. In Claude Code, say:
 
-```
+```text
 Convert this recipe for my Thermomix TM7 and upload to Cookidoo:
 https://example.com/chocolate-cake-recipe
 ```
 
 Or paste the recipe text directly:
 
-```
+```text
 Convert this to TM7 and upload to Cookidoo:
 
 Ingredients: 200g flour, 100g sugar, 2 eggs, 150g butter...
@@ -120,17 +123,27 @@ Claude converts standard recipes to Thermomix format using these typical operati
 Cookidoo doesn't provide a public API, but the web app uses internal REST endpoints that we can call from the browser context. This project uses two endpoints:
 
 **Create a recipe:**
-```
+
+```text
 POST /created-recipes/{locale}
 Body: { "recipeName": "My Recipe" }
 ```
 
 **Update a recipe (ingredients, steps, metadata):**
-```
+
+```json
 PATCH /created-recipes/{locale}/{recipeId}
 Body: {
   ingredients: [{ type: "INGREDIENT", text: "228 g flour" }],
-  instructions: [{ type: "STEP", text: "Add flour. Mix 5 sec/speed 4." }],
+  instructions: [{
+    type: "STEP",
+    text: "Add 228 g flour.",
+    annotations: [{
+      type: "INGREDIENT",
+      data: { description: "228 g flour" },
+      position: { offset: 4, length: 11 }
+    }]
+  }],
   tools: ["TM7"],
   totalTime: 9000,  // seconds
   prepTime: 1200,   // seconds
@@ -138,14 +151,21 @@ Body: {
 }
 ```
 
+**Key discovery:** Cookidoo supports two annotation types in steps:
+
+- **`INGREDIENT`** — links text to an ingredient from the list (renders as bold/highlighted)
+- **`TTS`** (Thermomix Time/Speed) — marks machine actions with speed, time, and temperature
+
+Without annotations, ingredients appear as plain text. With annotations, they are linked and interactive — just like official Vorwerk recipes.
+
 Authentication is handled automatically through browser cookies when using Chrome DevTools MCP.
 
 ### 3. Output
 
-Claude generates three things:
-- **Cookidoo recipe** — uploaded directly to your account (if browser connected)
-- **Markdown file** (`.md`) — full recipe with ingredients table and numbered steps
-- **PDF file** (`.pdf`) — formatted for printing
+Claude generates:
+
+- **Cookidoo recipe** — uploaded directly to your account with linked ingredients and TTS annotations (if browser connected)
+- **Recipe image** — uses your provided image, or generates one automatically
 
 ---
 
@@ -185,9 +205,9 @@ Google Chrome and the DevTools MCP are **only required if you want to upload rec
 
 | Mode | Chrome needed? | MCP needed? | What you get |
 |---|:---:|:---:|---|
-| **Full (recommended)** | Yes | Yes | Cookidoo upload + `.md` + `.pdf` |
-| **Manual cookie** | Any browser | No | Cookidoo upload + `.md` + `.pdf` |
-| **Offline** | No | No | `.md` + `.pdf` only |
+| **Full (recommended)** | Yes | Yes | Cookidoo upload with annotations + image |
+| **Manual cookie** | Any browser | No | Cookidoo upload with annotations |
+| **Offline** | No | No | Recipe conversion only (no upload) |
 
 ### Manual cookie approach
 
@@ -207,16 +227,12 @@ If you don't want to install Chrome DevTools MCP, you can manually provide the a
 
 If you just want the recipe converted without uploading to Cookidoo:
 
-```
-Convert this recipe for my Thermomix TM6, just generate the files:
+```text
+Convert this recipe for my Thermomix TM6, don't upload:
 https://example.com/pasta-recipe
 ```
 
-Claude will generate:
-- A `.md` file with the full recipe
-- A `.pdf` file for printing
-
-No browser setup required for this mode.
+Claude will convert the recipe to Thermomix format with proper speeds, times, and temperatures. No browser setup required for this mode.
 
 ---
 
@@ -254,7 +270,7 @@ Claude uses standard Thermomix operation guidelines, but these are estimates. Yo
 Claude will adapt the recipe. For example, if you have a TM5 (max 120°C) and the recipe needs 180°C, Claude will suggest using an oven for that step instead.
 
 **Q: Can I add a photo to the recipe?**
-Not via the API currently. After uploading, you can add a photo manually through the Cookidoo web interface or app by clicking "Carregar imagem" (Upload image) on the recipe page.
+Yes! You can provide an image (URL or file) or let Claude generate one automatically. The image is uploaded via the Cookidoo edit page using Chrome DevTools MCP.
 
 ### Cookidoo Integration
 
@@ -298,12 +314,14 @@ Make sure your Thermomix is connected to Wi-Fi and synced with Cookidoo. Go to t
 ## References
 
 ### Tools
+
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's CLI for Claude
 - [Chrome DevTools MCP (GitHub)](https://github.com/anthropics/anthropic-devtools-mcp) — Browser automation for AI agents
 - [Chrome DevTools MCP (npm)](https://www.npmjs.com/package/@anthropic-ai/chrome-devtools-mcp) — npm package
 - [Chrome DevTools MCP (blog)](https://developer.chrome.com/blog/chrome-devtools-mcp) — Official Chrome announcement
 
 ### Cookidoo Official
+
 - [Cookidoo Help Center](https://support.vorwerk.com/hc/en-us/categories/360002717300-COOKIDOO)
 - [Created Recipes Overview](https://support.vorwerk.com/hc/en-us/sections/4404592060050-Cookidoo-Created-Recipes)
 - [Created Recipes Basics](https://support.vorwerk.com/hc/en-us/articles/4404599366674-Basic-information-about-Cookidoo-Created-Recipes)
@@ -314,11 +332,13 @@ Make sure your Thermomix is connected to Wi-Fi and synced with Cookidoo. Go to t
 - [Tutorial: Adding Ingredients & Steps (Advanced)](https://cookidoo.thermomix.com/foundation/tutorials/en-US/courses/how-to-edit/edit-addingingredientandstepadvanced)
 
 ### Community / Unofficial API
+
 - [cookiput](https://github.com/croeer/cookiput) — Python tool for importing recipes via API (JSON payload examples)
 - [cookidoo-api](https://github.com/miaucl/cookidoo-api) — Unofficial Python API client (intercepted requests)
 - [AIdoo](https://aidoo.tools/) — AI-powered recipe converter for Thermomix
 
 ### Cookidoo Regional Portals
+
 [Portugal](https://cookidoo.pt) &bull; [Brasil](https://cookidoo.com.br) &bull; [US](https://cookidoo.thermomix.com) &bull; [UK](https://cookidoo.co.uk) &bull; [Germany](https://cookidoo.de) &bull; [Spain](https://cookidoo.es) &bull; [France](https://cookidoo.fr) &bull; [Italy](https://cookidoo.it)
 
 ---
