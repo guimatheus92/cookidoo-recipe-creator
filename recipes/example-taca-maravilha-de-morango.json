@@ -1,0 +1,106 @@
+{
+  "recipeId": "01KKSCPMZRR3TCZ0F2D01TCXY1",
+  "name": "Taça Maravilha de Morango",
+  "image": "https://ugc.assets.tmecosys.com/image/upload/{transformation}/prod/img/customer-recipe/eubujexvu1av0sacplf9.jpg",
+  "model": "TM7",
+  "language": "pt-BR",
+  "domain": "cookidoo.pt",
+  "prepTime": 1800,
+  "totalTime": 7200,
+  "servings": {
+    "value": 6,
+    "unit": "portion"
+  },
+  "ingredients": [
+    { "type": "INGREDIENT", "text": "500 g de leite integral" },
+    { "type": "INGREDIENT", "text": "395 g de leite condensado" },
+    { "type": "INGREDIENT", "text": "3 gemas" },
+    { "type": "INGREDIENT", "text": "40 g de amido de milho" },
+    { "type": "INGREDIENT", "text": "5 g de essência de baunilha" },
+    { "type": "INGREDIENT", "text": "395 g de leite condensado, para o brigadeiro branco" },
+    { "type": "INGREDIENT", "text": "15 g de manteiga sem sal" },
+    { "type": "INGREDIENT", "text": "200 g de creme de leite" },
+    { "type": "INGREDIENT", "text": "300 g de morangos frescos" }
+  ],
+  "instructions": [
+    {
+      "type": "STEP",
+      "text": "Coloque no copo 500 g de leite integral, 395 g de leite condensado, 3 gemas, 40 g de amido de milho e 5 g de essência de baunilha.",
+      "annotations": [
+        { "type": "INGREDIENT", "data": { "description": "500 g de leite integral" }, "position": { "offset": 16, "length": 23 } },
+        { "type": "INGREDIENT", "data": { "description": "395 g de leite condensado" }, "position": { "offset": 41, "length": 25 } },
+        { "type": "INGREDIENT", "data": { "description": "3 gemas" }, "position": { "offset": 68, "length": 7 } },
+        { "type": "INGREDIENT", "data": { "description": "40 g de amido de milho" }, "position": { "offset": 77, "length": 22 } },
+        { "type": "INGREDIENT", "data": { "description": "5 g de essência de baunilha" }, "position": { "offset": 102, "length": 27 } }
+      ]
+    },
+    {
+      "type": "STEP",
+      "text": "Cozinhe 8 min/90°C/velocidade 4.",
+      "annotations": [
+        { "type": "TTS", "data": { "speed": "4", "time": 480, "temperature": { "value": "90", "unit": "C" } }, "position": { "offset": 8, "length": 23 } }
+      ]
+    },
+    {
+      "type": "STEP",
+      "text": "Transfira o creme paris para um recipiente e reserve na geladeira por pelo menos 1 hora. Lave o copo.",
+      "annotations": []
+    },
+    {
+      "type": "STEP",
+      "text": "Coloque no copo 395 g de leite condensado, para o brigadeiro branco e 15 g de manteiga sem sal.",
+      "annotations": [
+        { "type": "INGREDIENT", "data": { "description": "395 g de leite condensado, para o brigadeiro branco" }, "position": { "offset": 16, "length": 51 } },
+        { "type": "INGREDIENT", "data": { "description": "15 g de manteiga sem sal" }, "position": { "offset": 70, "length": 24 } }
+      ]
+    },
+    {
+      "type": "STEP",
+      "text": "Cozinhe 10 min/100°C/velocidade 2.",
+      "annotations": [
+        { "type": "TTS", "data": { "speed": "2", "time": 600, "temperature": { "value": "100", "unit": "C" } }, "position": { "offset": 8, "length": 25 } }
+      ]
+    },
+    {
+      "type": "STEP",
+      "text": "Adicione 200 g de creme de leite.",
+      "annotations": [
+        { "type": "INGREDIENT", "data": { "description": "200 g de creme de leite" }, "position": { "offset": 9, "length": 23 } }
+      ]
+    },
+    {
+      "type": "STEP",
+      "text": "Misture 10 seg/velocidade 3.",
+      "annotations": [
+        { "type": "TTS", "data": { "speed": "3", "time": 10 }, "position": { "offset": 8, "length": 19 } }
+      ]
+    },
+    {
+      "type": "STEP",
+      "text": "Transfira o brigadeiro branco para um recipiente e deixe esfriar.",
+      "annotations": []
+    },
+    {
+      "type": "STEP",
+      "text": "Corte 300 g de morangos frescos em pedaços.",
+      "annotations": [
+        { "type": "INGREDIENT", "data": { "description": "300 g de morangos frescos" }, "position": { "offset": 6, "length": 25 } }
+      ]
+    },
+    {
+      "type": "STEP",
+      "text": "Monte as taças em camadas: morangos, creme paris e brigadeiro branco. Repita as camadas.",
+      "annotations": []
+    },
+    {
+      "type": "STEP",
+      "text": "Decore com morango fresco no topo.",
+      "annotations": []
+    },
+    {
+      "type": "STEP",
+      "text": "Leve à geladeira por 1 hora antes de servir.",
+      "annotations": []
+    }
+  ]
+}
