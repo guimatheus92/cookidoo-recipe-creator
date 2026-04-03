@@ -17,8 +17,9 @@
     { "type": "INGREDIENT", "text": "3 gemas" },
     { "type": "INGREDIENT", "text": "40 g de amido de milho" },
     { "type": "INGREDIENT", "text": "5 g de essência de baunilha" },
-    { "type": "INGREDIENT", "text": "395 g de leite condensado, para o brigadeiro branco" },
+    { "type": "INGREDIENT", "text": "395 g de leite condensado, para o brigadeiro de chocolate" },
     { "type": "INGREDIENT", "text": "15 g de manteiga sem sal" },
+    { "type": "INGREDIENT", "text": "200 g de chocolate meio amargo" },
     { "type": "INGREDIENT", "text": "200 g de creme de leite" },
     { "type": "INGREDIENT", "text": "300 g de morangos frescos" }
   ],
@@ -48,10 +49,11 @@
     },
     {
       "type": "STEP",
-      "text": "Coloque no copo 395 g de leite condensado, para o brigadeiro branco e 15 g de manteiga sem sal.",
+      "text": "Coloque no copo 395 g de leite condensado, para o brigadeiro de chocolate, 15 g de manteiga sem sal e 200 g de chocolate meio amargo.",
       "annotations": [
-        { "type": "INGREDIENT", "data": { "description": "395 g de leite condensado, para o brigadeiro branco" }, "position": { "offset": 16, "length": 51 } },
-        { "type": "INGREDIENT", "data": { "description": "15 g de manteiga sem sal" }, "position": { "offset": 70, "length": 24 } }
+        { "type": "INGREDIENT", "data": { "description": "395 g de leite condensado, para o brigadeiro de chocolate" }, "position": { "offset": 16, "length": 57 } },
+        { "type": "INGREDIENT", "data": { "description": "15 g de manteiga sem sal" }, "position": { "offset": 75, "length": 24 } },
+        { "type": "INGREDIENT", "data": { "description": "200 g de chocolate meio amargo" }, "position": { "offset": 102, "length": 30 } }
       ]
     },
     {
@@ -77,7 +79,7 @@
     },
     {
       "type": "STEP",
-      "text": "Transfira o brigadeiro branco para um recipiente e deixe esfriar.",
+      "text": "Transfira o brigadeiro de chocolate para um recipiente e deixe esfriar.",
       "annotations": []
     },
     {
@@ -89,7 +91,7 @@
     },
     {
       "type": "STEP",
-      "text": "Monte as taças em camadas: morangos, creme paris e brigadeiro branco. Repita as camadas.",
+      "text": "Monte as taças em camadas: morangos, creme paris e brigadeiro de chocolate. Repita as camadas.",
       "annotations": []
     },
     {
