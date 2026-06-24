@@ -158,7 +158,9 @@ Body: {
 
 Without annotations, ingredients appear as plain text. With annotations, they are linked and interactive — just like official Vorwerk recipes.
 
-Authentication is handled automatically through browser cookies when using Chrome DevTools MCP.
+**Read vs write:** `GET /created-recipes/{locale}/{recipeId}` returns a *different*, schema.org-style shape — `recipeContent.recipeIngredient` / `recipeInstructions` as plain strings, `totalTime` as an ISO-8601 duration like `PT2H30M`, plus `tool` and `recipeYield`. Annotations aren't echoed back. This read-back is a browser-free way to verify an upload succeeded.
+
+Authentication is handled automatically through browser cookies when using Chrome DevTools MCP (Option A), or by sending the session cookie as a header when running via Node/curl (Option C).
 
 ### 3. Output
 
@@ -197,6 +199,8 @@ Claude generates:
 | French | cookidoo.fr | fr-FR |
 | Italian | cookidoo.it | it-IT |
 
+> **Heads-up:** the created-recipes API runs on whichever host your browser session is logged into — frequently **`cookidoo.international`** rather than the regional portal above. Created recipes are tied to your Vorwerk **account**, so they appear on every portal you log into regardless of which host created them. If uploads 401 or redirect, confirm the host (where your `v-authenticated` cookie is scoped) and the locale (`GET /created-recipes/{locale}` should return JSON, not a 307). Example: on `cookidoo.international`, `pt-BR` works while `en-US`/`pt-PT` redirect to `/en`.
+
 ---
 
 ## Alternative Setup (No Chrome / No MCP)
@@ -216,10 +220,20 @@ If you don't want to install Chrome DevTools MCP, you can manually provide the a
 1. Open Cookidoo in your browser and log in
 2. Press **F12** to open Developer Tools
 3. Go to **Application** tab (Chrome/Edge) or **Storage** tab (Firefox) &rarr; **Cookies** &rarr; click your Cookidoo domain
-4. Find the cookie named `v-authenticated`
-5. Copy its value and share it with Claude
+4. Find the cookie named `v-authenticated` (and `_oauth2_proxy`)
+5. Copy the value(s) and share with Claude
 
 > The cookie expires after some time, so you may need to repeat this.
+
+**Running it with no browser automation at all:** once Claude has the cookie (or a `cookies.txt` export), it executes the `POST`/`PATCH` directly via Node (`fetch`, Node 18+) or `curl -b cookies.txt` — no Chrome, no MCP. This is the most reliable path if you only have Edge/Firefox. The repo ships a helper:
+
+```bash
+node scripts/upload-recipe.mjs --cookies cookies.txt --recipe my-recipe.json
+```
+
+See [`scripts/README.md`](scripts/README.md) for the recipe-spec format.
+
+> ⚠️ A full-browser `cookies.txt` export contains **every** site's cookies (banking, email, live sessions). Share only the Cookidoo lines (`v-authenticated`, `_oauth2_proxy`), or delete the export immediately after use.
 
 ---
 
@@ -301,7 +315,7 @@ Yes. Cookidoo has a "Partilhar" (Share) feature for created recipes. After uploa
 Make sure Chrome is running with `--remote-debugging-port=9222` and that you restarted Claude Code after adding the MCP configuration.
 
 **Q: The API returns a 401 or 403 error.**
-Your Cookidoo session may have expired. Refresh the Cookidoo page in Chrome and log in again.
+Your Cookidoo session may have expired — refresh the Cookidoo page in your browser and log in again. Also confirm you're calling the **right host**: your cookies are scoped to the domain you actually logged into (often `cookidoo.international`), and a different regional portal won't receive them. Verify the locale returns JSON (not a 307 redirect) via `GET /created-recipes/{locale}`.
 
 **Q: The recipe was created but ingredients are empty.**
 The PATCH may have failed silently. Ask Claude to retry the PATCH call. The API is idempotent, so it's safe to re-run.

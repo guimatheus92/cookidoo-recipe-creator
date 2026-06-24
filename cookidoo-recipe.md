@@ -38,6 +38,8 @@ Ask the user (or use defaults) before starting:
 | fr-FR | cookidoo.fr | fr-FR | `228 g de farine de blé` |
 | it-IT | cookidoo.it | it-IT | `228 g di farina` |
 
+> **CRITICAL — the table above is the *ideal* mapping; reality often differs.** The created-recipes API lives on whatever Cookidoo host your browser session is actually authenticated on, which is frequently **`cookidoo.international`** rather than the regional portal. Your auth cookies (`v-authenticated`, `_oauth2_proxy`) are scoped to that one host and are **not** sent to a different portal — calling the wrong host gives 401/redirects. Created recipes are tied to your **Vorwerk account**, so a recipe created via `cookidoo.international` still shows up under "My Recipes" on `cookidoo.pt`, `cookidoo.com.br`, etc. **Always confirm the host + locale first** — see [Finding the right domain & locale](#finding-the-right-domain--locale).
+
 ### TM step vocabulary by language
 
 | Concept | pt-PT / pt-BR | en-US / en-GB | de-DE | es-ES | fr-FR | it-IT |
@@ -55,6 +57,8 @@ There are two ways to connect to Cookidoo. Option A is recommended.
 ### Option A: Chrome DevTools MCP (recommended)
 
 This lets Claude interact directly with your browser — no manual cookie copying needed.
+
+> ⚠️ Requires **Google Chrome actually installed** — the MCP launches/attaches to Chrome, not Edge/Firefox/Safari. If you don't have Chrome, skip to **Option C** (cookie + Node/curl), which needs no browser automation at all.
 
 **One-time setup:**
 
@@ -96,6 +100,26 @@ If you don't have Chrome DevTools MCP, you can manually provide the auth cookie:
 
 > Note: this cookie expires after some time, so you may need to repeat this.
 
+### Option C: Cookie + Node or curl (no browser automation at all)
+
+**The most robust path when Chrome isn't installed** (you only have Edge/Firefox) or the MCP isn't connected. Claude runs the API calls directly.
+
+1. Log into Cookidoo in **any** browser.
+2. Provide the session cookies — either:
+   - copy the **`v-authenticated`** *and* **`_oauth2_proxy`** values (F12 → Application/Storage → Cookies), or
+   - use a "cookies.txt" exporter extension (Netscape format) — Claude filters it down to the Cookidoo host.
+3. Claude runs `POST` + `PATCH` via Node (`fetch`, Node 18+) or `curl -b cookies.txt`, sending the cookies as a header.
+
+A ready-made helper does all of this — parse cookies, compute annotation offsets, upload, and read back to verify:
+
+```bash
+node scripts/upload-recipe.mjs --cookies cookies.txt --recipe my-recipe.json
+```
+
+See [`scripts/README.md`](scripts/README.md) for the recipe-spec format.
+
+> ⚠️ **Security:** a full-browser `cookies.txt` export contains **every** site's cookies (banking, email, live sessions). Share only the Cookidoo lines, or delete the export immediately after use. Never paste a whole export into a chat that leaves your machine.
+
 ### No setup needed for .md/.pdf only
 
 If you just want the recipe converted (no Cookidoo upload), no setup is required. Just share the recipe URL or text.
@@ -107,6 +131,19 @@ If you just want the recipe converted (no Cookidoo upload), no setup is required
 | .md + .pdf only | Nothing — just share the recipe |
 | Cookidoo upload (Option A) | Chrome DevTools MCP + logged into Cookidoo in Chrome |
 | Cookidoo upload (Option B) | Auth cookie from browser DevTools |
+| Cookidoo upload (Option C) | Cookie value or `cookies.txt` + Node 18+ or curl (no browser automation) |
+
+## Finding the right domain & locale
+
+Before the first upload (or whenever uploads fail with 401s/redirects), confirm where your session is authenticated and which locale the API accepts:
+
+1. **Which host?** Look at where the auth cookies (`v-authenticated`, `_oauth2_proxy`) are scoped. That domain is the host to call — in practice frequently `cookidoo.international`, even for non-English users. (Calling a different regional portal won't send your cookies.)
+2. **Which locale?** `GET https://{host}/created-recipes/{locale}` with your cookies:
+   - **200 + JSON** (a `{ "meta": {…}, "items": [...] }` list) → that locale works. Use it.
+   - **307 redirect** to `/created-recipes/{other}` → that locale isn't enabled for your account; use the one it redirects to.
+
+   Real example: on `cookidoo.international`, `pt-BR` returned the recipe list, while `en-US` and `pt-PT` both 307-redirected to `/en`.
+3. Created recipes are **account-bound**, so host/locale only decide which API accepts your cookies — the recipe appears on every portal you log into.
 
 ## Workflow
 
@@ -203,6 +240,18 @@ Marks a machine action with speed, time (in seconds), and optional temperature.
 - `temperature`: optional object with `value` (string) and `unit` ("C")
 - For steps without temperature (e.g. "Misture 10 seg/velocidade 3."), omit `temperature`
 
+##### Spoon speed, Varoma, and reverse (special settings)
+
+The TTS `data` schema only models numeric `speed`, `time` (seconds), and numeric `temperature`. Three common Thermomix settings don't map to numbers — handle them like this:
+
+| Setting | In the step **text** (what the cook reads) | In TTS `data` (metadata) |
+|---|---|---|
+| Reverse blade | `sentido anti-horário` / `reverse` | no field — leave it in the text only |
+| Spoon speed | `velocidade colher` / `spoon speed` | `speed: "1"` (closest valid numeric) |
+| Varoma temp | `Varoma` | omit `temperature` |
+
+**Why this is safe:** the machine action a cook follows is driven by the **step text**; the TTS annotation only highlights that span and carries metadata for guided cooking. So keep the text faithful (`velocidade colher`, `Varoma`, `sentido anti-horário`) and use valid fallback metadata — the PATCH is accepted and the recipe renders exactly as written. (Confirmed by inspecting imported recipes, where machine actions are stored as inline text only.)
+
 ##### Full instruction example with annotations
 
 ```json
@@ -240,6 +289,8 @@ Marks a machine action with speed, time (in seconds), and optional temperature.
 3. Count the number of characters in the reference
 4. The `description` in INGREDIENT annotations must match the ingredient text from the `ingredients` array exactly
 
+> **Don't count by hand — compute offsets in code.** Manual counting is the #1 cause of broken annotations. Write the full step text, then for each reference use `offset = text.indexOf(reference)` and `length = reference.length`. JS string `.length` (UTF-16) matches Cookidoo's counting — the degree sign `°` counts as **1**. The [`scripts/upload-recipe.mjs`](scripts/upload-recipe.mjs) helper does this for you from a simple recipe spec.
+
 #### Typical Thermomix operations
 
 | Operation | Setting |
@@ -255,6 +306,15 @@ Marks a machine action with speed, time (in seconds), and optional temperature.
 | Boil | X min/100°C/vel 1 |
 | Steam (Varoma) | X min/Varoma/vel 1 |
 
+#### Adapting non-Thermomix techniques
+
+Many recipes assume tools the Thermomix doesn't have. Common adaptations:
+
+- **Pressure cooker** → no pressure mode. Braise long and gentle: `X min/100°C (or Varoma)/velocidade colher, sentido anti-horário` (reverse + spoon speed so chunks don't shred to paste). A 40-min pressure braise ≈ 90+ min in the TM. On TM7/TM6, **Slow Cook / Cozimento Lento** (2–4 h) is an even better match.
+- **Searing / browning for a crust** → the TM can't truly sear (the bowl steams). For real crust, sear in a hot skillet in batches and return the meat to the bowl; or use **Sauté / high-temp mode** (~160°C, reverse, no measuring cup) as second-best.
+- **Bowl capacity (~2.2 L)** → big batches overflow. Scale the ingredients, then **work in batches**: sear in 2–3 loads (never overcrowd — it steams instead of browning) and braise in 2 loads if you're over the MAX line. Describe the batching in the step text instead of duplicating steps.
+- **Reduce a watery sauce** → finish uncovered: `Varoma/velocidade 1/sentido anti-horário/10–15 min` without the measuring cup.
+
 ### 4. Generate recipe image
 
 If the user provides an image (URL or file), use it. Otherwise, generate a high-quality, appetizing photo of the finished dish.
@@ -268,7 +328,7 @@ When uploading to Cookidoo, the image can be set via the recipe edit page in the
 
 ### 5. Generate outputs
 
-Do NOT save recipe files locally unless the user explicitly asks. A reference example is available at `recipes/example-taca-maravilha-de-morango.json`.
+Do NOT save recipe files locally unless the user explicitly asks. A reference example recipe spec is available at [`recipes/example-carne-louca.json`](recipes/example-carne-louca.json) (the input format for [`scripts/upload-recipe.mjs`](scripts/upload-recipe.mjs)). The raw PATCH/annotation format is shown inline above under [Full instruction example with annotations](#full-instruction-example-with-annotations).
 
 #### If uploading to Cookidoo: API calls
 
@@ -367,7 +427,27 @@ Skip the POST and go straight to PATCH.
 
 ### 6. Verify
 
-Reload the page and take a screenshot to confirm.
+Read the recipe back via the API (works without a browser) and check the content persisted — count ingredients/steps and spot-check the text:
+
+```javascript
+const r = await fetch(`https://${domain}/created-recipes/${locale}/${recipeId}`, {
+  headers: { Accept: 'application/json', Cookie: 'v-authenticated=...; _oauth2_proxy=...' }
+});
+const { recipeContent } = await r.json();
+// recipeContent.recipeIngredient.length, recipeContent.recipeInstructions.length, recipeContent.totalTime ...
+```
+
+**The GET (read) format differs from the PATCH (write) format** — don't expect your payload echoed back verbatim:
+
+| | Write (PATCH) | Read (GET, schema.org) |
+|---|---|---|
+| Ingredients | `ingredients: [{ type, text }]` | `recipeContent.recipeIngredient: ["…", …]` (strings) |
+| Steps | `instructions: [{ type, text, annotations }]` | `recipeContent.recipeInstructions: ["…", …]` (strings) |
+| Times | `totalTime: 9000` (seconds) | `totalTime: "PT2H30M"` (ISO-8601 duration) |
+| Tools | `tools: ["TM7"]` | `tool: ["TM7"]` |
+| Yield | `yield: { value, unitText }` | `recipeYield: { value, unitText }` |
+
+Annotations are **not** echoed in the GET — they're a write-time linking layer. If a browser is open, reloading the edit page and screenshotting is a nice extra check, but the read-back is the reliable, browser-free one.
 
 ## Ingredient Format Rules
 

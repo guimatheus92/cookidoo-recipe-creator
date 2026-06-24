@@ -1,0 +1,85 @@
+{
+  "name": "Carne Louca",
+  "model": "TM7",
+  "prepTime": 3600,
+  "totalTime": 10800,
+  "yield": { "value": 12, "unitText": "portion" },
+  "ingredients": [
+    "1300 g de acém em cubos (~3 cm)",
+    "sal a gosto",
+    "páprica defumada a gosto",
+    "pimenta-do-reino a gosto",
+    "60 g de óleo",
+    "2 cebolas grandes",
+    "8 dentes de alho",
+    "2 pimentões vermelhos",
+    "2 pimentões verdes",
+    "400 g de tomate (4 unidades)",
+    "pimenta-de-cheiro a gosto",
+    "450 g de molho de tomate",
+    "400 g de cerveja preta",
+    "150 g de água (opcional)",
+    "15 g de shoyu (1 colher de sopa)",
+    "6 folhas de louro",
+    "cebolinha a gosto",
+    "salsa a gosto",
+    "12 pães franceses",
+    "500 g de mussarela"
+  ],
+  "steps": [
+    {
+      "text": "Tempere 1300 g de acém em cubos (~3 cm) com sal a gosto, páprica defumada a gosto e pimenta-do-reino a gosto. Reserve.",
+      "ings": ["1300 g de acém em cubos (~3 cm)", "sal a gosto", "páprica defumada a gosto", "pimenta-do-reino a gosto"]
+    },
+    {
+      "text": "Sele a carne em 3 levas, em uma frigideira bem quente com um pouco de óleo, até dourar e formar crosta. Não superlote, senão a carne cozinha no vapor em vez de dourar. Reserve. (Alternativa no copo: modo Sauté/160°C, sentido anti-horário, sem o copo medidor.)"
+    },
+    {
+      "text": "Coloque no copo 2 cebolas grandes e 8 dentes de alho.",
+      "ings": ["2 cebolas grandes", "8 dentes de alho"]
+    },
+    { "text": "Pique 5 seg/velocidade 5.", "tts": { "snippet": "5 seg/velocidade 5", "speed": "5", "time": 5 } },
+    { "text": "Adicione 60 g de óleo.", "ings": ["60 g de óleo"] },
+    {
+      "text": "Refogue 5 min/120°C/velocidade colher, sentido anti-horário.",
+      "tts": { "snippet": "5 min/120°C/velocidade colher", "speed": "1", "time": 300, "temp": "120" }
+    },
+    {
+      "text": "Adicione 2 pimentões vermelhos, 2 pimentões verdes, 400 g de tomate (4 unidades) e pimenta-de-cheiro a gosto.",
+      "ings": ["2 pimentões vermelhos", "2 pimentões verdes", "400 g de tomate (4 unidades)", "pimenta-de-cheiro a gosto"]
+    },
+    { "text": "Pique 3 seg/velocidade 4.", "tts": { "snippet": "3 seg/velocidade 4", "speed": "4", "time": 3 } },
+    {
+      "text": "Refogue 5 min/120°C/velocidade colher, sentido anti-horário.",
+      "tts": { "snippet": "5 min/120°C/velocidade colher", "speed": "1", "time": 300, "temp": "120" }
+    },
+    {
+      "text": "Devolva a carne selada ao copo e acrescente 450 g de molho de tomate, 400 g de cerveja preta, 15 g de shoyu (1 colher de sopa) e 6 folhas de louro. Se precisar, junte até 150 g de água (opcional).",
+      "ings": ["450 g de molho de tomate", "400 g de cerveja preta", "15 g de shoyu (1 colher de sopa)", "6 folhas de louro", "150 g de água (opcional)"]
+    },
+    {
+      "text": "Com 1,3 kg de carne, faça o braseado em 2 levas (cerca de 650 g de carne e metade dos demais ingredientes em cada) se ultrapassar a marca MÁX do copo."
+    },
+    {
+      "text": "Cozinhe 90 min/100°C/velocidade colher, sentido anti-horário. Se a carne não desfiar, cozinhe mais 15–20 min. (Alternativa: modo Cozimento Lento, 3–4 h, para ficar mais macia.)",
+      "tts": { "snippet": "90 min/100°C/velocidade colher", "speed": "1", "time": 5400, "temp": "100" }
+    },
+    {
+      "text": "Reduza o caldo, se estiver líquido: 10 min/Varoma/velocidade 1, sentido anti-horário, sem o copo medidor, até encorpar.",
+      "tts": { "snippet": "10 min/Varoma/velocidade 1", "speed": "1", "time": 600 }
+    },
+    {
+      "text": "Desfie a carne em porções (o copo cheio não desfia bem): dê pulsos de 10 seg/velocidade 4, sentido anti-horário, por leva, até virar carne louca (cuidado para não virar pasta).",
+      "tts": { "snippet": "10 seg/velocidade 4", "speed": "4", "time": 10 }
+    },
+    { "text": "Junte cebolinha a gosto e salsa a gosto.", "ings": ["cebolinha a gosto", "salsa a gosto"] },
+    {
+      "text": "Misture 20 seg/velocidade colher, sentido anti-horário.",
+      "tts": { "snippet": "20 seg/velocidade colher", "speed": "1", "time": 20 }
+    },
+    {
+      "text": "Escave 12 pães franceses, coloque 500 g de mussarela dentro e recheie com a carne louca quente. Sirva.",
+      "ings": ["12 pães franceses", "500 g de mussarela"]
+    }
+  ]
+}
