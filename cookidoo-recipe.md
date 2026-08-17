@@ -108,15 +108,26 @@ If you don't have Chrome DevTools MCP, you can manually provide the auth cookie:
 2. Provide the session cookies — either:
    - copy the **`v-authenticated`** *and* **`_oauth2_proxy`** values (F12 → Application/Storage → Cookies), or
    - use a "cookies.txt" exporter extension (Netscape format) — Claude filters it down to the Cookidoo host.
-3. Claude runs `POST` + `PATCH` via Node (`fetch`, Node 18+) or `curl -b cookies.txt`, sending the cookies as a header.
+3. Save them as `cookies.txt` in the project root. Any root file whose name contains "cookie" is gitignored, so it won't be committed.
+4. `cp .env.example .env` — this sets `COOKIES_FILE`, `COOKIDOO_HOST` and `COOKIDOO_LOCALE` once, so no flags are needed afterwards.
+5. Claude runs `POST` + `PATCH` via Node (`fetch`, Node 18+), sending the cookies as a header.
 
 A ready-made helper does all of this — parse cookies, compute annotation offsets, upload, and read back to verify:
 
 ```bash
-node scripts/upload-recipe.mjs --cookies cookies.txt --recipe my-recipe.json
+node scripts/upload-recipe.mjs --check-auth              # confirm the session first
+node scripts/upload-recipe.mjs --recipe my-recipe.json   # then upload
 ```
 
-See [`scripts/README.md`](scripts/README.md) for the recipe-spec format.
+**Always run `--check-auth` before the first upload of a session.** It does a single `GET` and
+exits — creating nothing — and turns the usual "401, but why?" into a definite answer: it
+reports expired cookies with their age, and prints any redirect target when the host or locale
+is wrong for the account.
+
+Config precedence is CLI flag > environment variable > `.env` > default, so `--host` / `--locale`
+/ `--cookies` still override the `.env` for one-off runs.
+
+See [`scripts/README.md`](scripts/README.md) for the recipe-spec format and the full flag list.
 
 > ⚠️ **Security:** a full-browser `cookies.txt` export contains **every** site's cookies (banking, email, live sessions). Share only the Cookidoo lines, or delete the export immediately after use. Never paste a whole export into a chat that leaves your machine.
 
@@ -131,19 +142,42 @@ If you just want the recipe converted (no Cookidoo upload), no setup is required
 | .md + .pdf only | Nothing — just share the recipe |
 | Cookidoo upload (Option A) | Chrome DevTools MCP + logged into Cookidoo in Chrome |
 | Cookidoo upload (Option B) | Auth cookie from browser DevTools |
-| Cookidoo upload (Option C) | Cookie value or `cookies.txt` + Node 18+ or curl (no browser automation) |
+| Cookidoo upload (Option C) | Cookie value or `cookies.txt` + Node 18+ (no browser automation) |
 
 ## Finding the right domain & locale
 
 Before the first upload (or whenever uploads fail with 401s/redirects), confirm where your session is authenticated and which locale the API accepts:
 
-1. **Which host?** Look at where the auth cookies (`v-authenticated`, `_oauth2_proxy`) are scoped. That domain is the host to call — in practice frequently `cookidoo.international`, even for non-English users. (Calling a different regional portal won't send your cookies.)
-2. **Which locale?** `GET https://{host}/created-recipes/{locale}` with your cookies:
-   - **200 + JSON** (a `{ "meta": {…}, "items": [...] }` list) → that locale works. Use it.
-   - **307 redirect** to `/created-recipes/{other}` → that locale isn't enabled for your account; use the one it redirects to.
+The fastest way is `node scripts/upload-recipe.mjs --check-auth`, which performs the check below
+and reports the verdict. What it is testing:
 
-   Real example: on `cookidoo.international`, `pt-BR` returned the recipe list, while `en-US` and `pt-PT` both 307-redirected to `/en`.
-3. Created recipes are **account-bound**, so host/locale only decide which API accepts your cookies — the recipe appears on every portal you log into.
+**Step 1 — which host?** Only two cookies matter: **`v-authenticated`** and **`_oauth2_proxy`**. Everything else in a Cookidoo export is consent/telemetry noise. **The domain those two sit on IS the host to call.** Read it straight out of the export (field 1 = domain, field 5 = expiry, field 6 = name) without printing any secret:
+
+```bash
+awk -F'\t' '$6=="v-authenticated" || $6=="_oauth2_proxy" {
+  printf "%-30s %-16s expires %s\n", $1, $6, strftime("%Y-%m-%d", $5) }' cookies.txt
+```
+
+```text
+.cookidoo.thermomix.com        v-authenticated  expires 2026-09-16
+.cookidoo.thermomix.com        _oauth2_proxy    expires 2026-09-16
+```
+
+→ `COOKIDOO_HOST=cookidoo.thermomix.com` (drop the leading dot). Calling any other portal returns 401 no matter how fresh the cookies are. If the command prints nothing, that export has no Cookidoo session in it.
+
+**Step 2 — which locale?** `GET https://{host}/created-recipes/{locale}` with those cookies:
+
+- **200 + JSON** (a `{ "meta": {…}, "items": [...] }` list) → host *and* locale are right.
+- **307 redirect** to `/created-recipes/{other}` → the host is right (the session was accepted); that locale just isn't enabled there. Switch to the one it redirects to.
+- **401 Unauthorized** → the cookies are wrong for this host, or expired. Go back to step 1; `--check-auth` names expired cookies with their age.
+
+Real examples, both observed on this project: on `cookidoo.international`, `pt-BR` returned the recipe list while `en-US`/`pt-PT` 307-redirected to `/en`. On `cookidoo.thermomix.com` it is the reverse — `pt-BR` 307-redirects and `en-US` returns 200. **The right locale depends on the host**, so always resolve the host first.
+
+Created recipes are **account-bound**, so host/locale only decide which API accepts your cookies — the recipe appears on every portal you log into.
+
+Once known, record the working pair in `.env` as `COOKIDOO_HOST` / `COOKIDOO_LOCALE` so it never has to be rediscovered.
+
+> ⚠️ A full-browser export holds every site's cookies (banking, email, password managers). Trim it before use: `grep -iE 'cookidoo|thermomix|vorwerk' export.txt > cookies.txt`. Never read or echo the `value` field (7) of a cookie line.
 
 ## Workflow
 

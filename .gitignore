@@ -1,3 +1,11 @@
 node_modules/
 *.pdf
 recipes/images/
+
+# Cookie files kept in the project root (any name containing "cookie", any case).
+# Spelled out per-letter because gitignore has no case-insensitive flag, and on
+# Linux (core.ignorecase=false) a plain /*cookie* would miss Cookies.txt.
+/*[cC][oO][oO][kK][iI][eE]*
+
+.env
+!.env.example
