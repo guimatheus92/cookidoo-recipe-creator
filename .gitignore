@@ -2,6 +2,9 @@ node_modules/
 *.pdf
 recipes/images/
 
+# Accessibility snapshots the Playwright MCP dumps on every navigation.
+.playwright-mcp/
+
 # Cookie files kept in the project root (any name containing "cookie", any case).
 # Spelled out per-letter because gitignore has no case-insensitive flag, and on
 # Linux (core.ignorecase=false) a plain /*cookie* would miss Cookies.txt.
