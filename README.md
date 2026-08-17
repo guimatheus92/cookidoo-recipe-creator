@@ -225,15 +225,27 @@ If you don't want to install Chrome DevTools MCP, you can manually provide the a
 
 > The cookie expires after some time, so you may need to repeat this.
 
-**Running it with no browser automation at all:** once Claude has the cookie (or a `cookies.txt` export), it executes the `POST`/`PATCH` directly via Node (`fetch`, Node 18+) or `curl -b cookies.txt` — no Chrome, no MCP. This is the most reliable path if you only have Edge/Firefox. The repo ships a helper:
+**Running it with no browser automation at all:** once Claude has the cookie (or a `cookies.txt` export), it executes the `POST`/`PATCH` directly via Node (`fetch`, Node 18+) — no Chrome, no MCP. This is the most reliable path if you only have Edge/Firefox. The repo ships a helper:
 
 ```bash
-node scripts/upload-recipe.mjs --cookies cookies.txt --recipe my-recipe.json
+# 1. Save your cookie export as cookies.txt in the project root (gitignored).
+# 2. Copy the config template — sets the cookie path, host and locale once:
+cp .env.example .env
+
+# 3. Confirm the session works. Uploads nothing, creates nothing:
+node scripts/upload-recipe.mjs --check-auth
+
+# 4. Upload:
+node scripts/upload-recipe.mjs --recipe my-recipe.json
 ```
 
-See [`scripts/README.md`](scripts/README.md) for the recipe-spec format.
+`.env` holds three optional settings — `COOKIES_FILE`, `COOKIDOO_HOST`, `COOKIDOO_LOCALE` — so you never retype them. CLI flags still override it for one-off runs. There's no `dotenv` dependency; the script reads `.env` itself, and the repo stays install-free.
 
-> ⚠️ A full-browser `cookies.txt` export contains **every** site's cookies (banking, email, live sessions). Share only the Cookidoo lines (`v-authenticated`, `_oauth2_proxy`), or delete the export immediately after use.
+See [`scripts/README.md`](scripts/README.md) for the full flag list and the recipe-spec format.
+
+> ⚠️ A full-browser `cookies.txt` export contains **every** site's cookies (banking, email, live sessions). Keep only the Cookidoo lines — `grep -i cookidoo export.txt > cookies.txt` — or delete the export immediately after use.
+>
+> Cookie files kept in the project root are gitignored (any root filename containing "cookie"), along with `.env`, so they can't be committed by accident.
 
 ---
 
@@ -315,7 +327,7 @@ Yes. Cookidoo has a "Partilhar" (Share) feature for created recipes. After uploa
 Make sure Chrome is running with `--remote-debugging-port=9222` and that you restarted Claude Code after adding the MCP configuration.
 
 **Q: The API returns a 401 or 403 error.**
-Your Cookidoo session may have expired — refresh the Cookidoo page in your browser and log in again. Also confirm you're calling the **right host**: your cookies are scoped to the domain you actually logged into (often `cookidoo.international`), and a different regional portal won't receive them. Verify the locale returns JSON (not a 307 redirect) via `GET /created-recipes/{locale}`.
+Run `node scripts/upload-recipe.mjs --check-auth` — it diagnoses this in one call. Expired cookies are reported by name with their age (it reads the expiry out of your export); a wrong host or locale shows up as a redirect with the target it wants. Fix by logging into Cookidoo again and re-exporting, or by adjusting `COOKIDOO_HOST` / `COOKIDOO_LOCALE` in `.env`. Note your cookies are scoped to the domain you actually logged into (often `cookidoo.international`) — a different regional portal won't receive them.
 
 **Q: The recipe was created but ingredients are empty.**
 The PATCH may have failed silently. Ask Claude to retry the PATCH call. The API is idempotent, so it's safe to re-run.
